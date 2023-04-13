@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+import "model.proto";
+
+option java_package = "ru.sberbank.blockchain.cnft.migration.tests.model";
+
+option (scalapb.options) = {
+  flat_package: true
+  preserve_unknown_fields: false
+  no_default_values_in_constructor: true
+  enum_value_naming: CAMEL_CASE
+  bytes_type: "ru.sberbank.blockchain.cnft.common.types.Bytes"
+  collection_type: "ru.sberbank.blockchain.cnft.common.types.Collection"
+};
+
+
+package migration.tests;
+
+
+// Client Test Data Export
+
+message ImportClientTestData {
+  string clientName = 1;
+  string walletId = 2;
+  string scenarioName = 3;
+  string scenarioId = 4;
+  string scenarioStatus = 5;
+  bytes cryptoData = 6;
+  repeated model.Operation operations = 7;
+  repeated V49WalletToken walletTokens = 8;
+  repeated V49WalletToken burntIssuedTokens = 9;
+  repeated V49WalletToken burntTokens = 10;
+  repeated V49WalletToken issuedTokens = 11;
+  repeated model.MessageRequest messages = 12;
+  repeated model.TokenType ownedTokenTypes = 13;
+  repeated model.Profile profiles = 14;
+  repeated model.SignedEndorsement signedEndorsments = 15;
+}
+
+message V49WalletToken {
+  string id = 1;
+  repeated string content = 2;
+  repeated model.Restriction restrictions = 3;
+  repeated string operations = 4;
+
+}
+
+message ImportSmartContractTestData {
+  string smartContractId = 1;
+  model.SmartContract smartContract = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated model.AcceptedDeal acceptedDeal = 3;
+}

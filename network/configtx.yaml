@@ -1,0 +1,151 @@
+
+Organizations:
+    - &OrdererOrg
+
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/tokenization.platform/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+        OrdererEndpoints:
+            - localhost:7150
+
+    - &sberbank
+        Name: sberbank
+        ID: sberbank
+        MSPDir: crypto-config/peerOrganizations/sberbank.tokenization.platform/msp
+
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('sberbank.admin', 'sberbank.peer', 'sberbank.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('sberbank.admin', 'sberbank.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('sberbank.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('sberbank.peer')"
+        AnchorPeers:
+            - Host: localhost
+              Port: 7151
+
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+
+    Orderer: &OrdererCapabilities
+        V2_0: true
+
+    Application: &ApplicationCapabilities
+        V2_0: true
+
+
+Application: &ApplicationDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+
+Orderer: &OrdererDefaults
+
+    OrdererType: etcdraft
+
+    Addresses:
+        - localhost:7150
+
+    EtcdRaft:
+        Consenters:
+            - Host: orderer-sberbank.tokenization.platform
+              Port: 7150
+              ClientTLSCert: crypto-config/ordererOrganizations/tokenization.platform/orderers/orderer-sberbank.tokenization.platform/tls/server.crt
+              ServerTLSCert: crypto-config/ordererOrganizations/tokenization.platform/orderers/orderer-sberbank.tokenization.platform/tls/server.crt
+        Options:
+            TickInterval: 500ms
+            ElectionTick: 10
+            HeartbeatTick: 1
+            MaxInflightBlocks: 5
+            SnapshotIntervalSize: 16 MB
+    BatchTimeout: 1s
+    BatchSize:
+        MaxMessageCount: 500
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 1 MB
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "ANY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities
+
+Profiles:
+    OrgsOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *sberbank
+    OrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *sberbank
+            Capabilities:
+                <<: *ApplicationCapabilities

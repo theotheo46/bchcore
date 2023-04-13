@@ -1,0 +1,1404 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+option java_package = "ru.sberbank.blockchain.cnft";
+
+option (scalapb.options) = {
+  preserve_unknown_fields: false
+  no_default_values_in_constructor: true
+  enum_value_naming: CAMEL_CASE
+  bytes_type: "ru.sberbank.blockchain.cnft.common.types.Bytes"
+  collection_type: "ru.sberbank.blockchain.cnft.common.types.Collection"
+};
+
+// =====================================================================================================================
+// Sberchain platform model
+// =====================================================================================================================
+
+package model;
+
+
+//message TokenId {
+//  string typeId = 1;
+//  string instanceId = 2;
+//
+//  //  export this struct to JS
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenId\")";
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+//}
+
+message WalletToken {
+  string id = 1;
+  repeated string content = 2;
+  repeated model.Restriction restrictions = 3;
+  repeated string operations = 4;
+  TokenOwner tokenOwner = 5 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  int32 status = 6;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"WalletToken\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenContent {
+  repeated string fields = 1;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenContent\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenRestrictions {
+  repeated Restriction restrictions = 1;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenRestrictions\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message Restriction {
+  string regulatorId = 1;
+  string restrictionId = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Restriction\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message RegulatorCapabilities {
+  string regulatorId = 1;
+  repeated string capabilities = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RegulatorCapabilities\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// operations linked to this token
+message TokenLinkedOperation {
+  string id = 1; // id of ongoing operation (in which this token participating)
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenLinkedOperation\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message RegulatorApproval {
+  string regulatorId = 1;
+  bool approve = 2;
+  string reason = 3; // TODO: encrypt/decrypt
+  bytes signature = 4;
+  string notice = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RegulatorApproval\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SignedTXRegulationRequest {
+  TXRegulationRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedTXRegulationRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+message SignedTXRegulationNotification {
+  TXRegulationNotification request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedTXRegulationNotification\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message PendingOperation {
+  string operationId = 1;
+  string operationType = 2;
+  bytes pendingOperation = 3;
+  repeated string regulators = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PendingOperation\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+}
+
+message TXRegulationNotification {
+  string operationId = 1;
+  string timestamp = 2;
+  string transactionId = 3;
+  string regulatorId = 4;
+  string notice = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TXRegulationNotification\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TXRegulationRequest {
+  string operationId = 1;
+  string timestamp = 2;
+  string transactionId = 3;
+  string regulatorId = 4;
+  string reason = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TXRegulationRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Token types
+// =====================================================================================================================
+
+// TokenType structure provides information about tokens of particular type
+message TokenType {
+  string typeId = 1;                 // Type Identifier
+  string issuerId = 2;              // Issuer id
+  TokenTypeMeta meta = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  DNA dna = 4 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated RegulatorCapabilities regulation = 5;
+  repeated FieldMeta burnExtraData = 6;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenType\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenTypeMeta {
+  repeated DescriptionField description = 1;  // static token type properties
+  repeated FieldMeta fields = 2;             // Token fields
+  //  bool publicType = 3;                        // no encryption require for tokens of this type
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenTypeMeta\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SignedTokenTypeRegistration{
+  TokenTypeRegistrationRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedTokenTypeRegistration\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenTypeRegistrationRequest{
+  string operationId = 1;
+  string timestamp = 2;
+  repeated TokenType tokenType = 3;
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenTypeRegistrationRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message DescriptionField {
+  string name = 1;
+  string typeId = 2;
+  string value = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DescriptionField\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message FieldMeta {
+  string id = 1; // field identifier(as referenced in contract)
+  string typeId = 2; // identifier of type e.g. Numeric, Text, Date
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"FieldMeta\")";
+}
+
+// =====================================================================================================================
+// Token structure
+// =====================================================================================================================
+
+message TokenOwner {
+  sint32 ownerType = 1; // 0 - Signatures , 1 -  SmartContract
+  bytes address = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenOwner\")";
+}
+
+message Signatures {
+  sint32 require = 1;
+  repeated bytes keys = 2; // public keys
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Signatures\")";
+}
+
+
+// =====================================================================================================================
+// Requests and responses for operations with tokens
+// =====================================================================================================================
+
+// Signature of token owner
+message OwnerSignature {
+  string tokenId = 1;
+  bytes signature = 2;                     // signature of token owner
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"OwnerSignature\")";
+}
+
+message RequestActor {
+  string theType = 1;                     // the type of request actor either "SmartContract" or "Member" @see RequestActorType
+  bytes value = 2;                     // depending on theType could be either address of smart contract or encrypted member signature
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RequestActor\")";
+}
+
+
+// =====================================================================================================================
+// Issue
+
+message PendingIssue {
+  IssueTokenRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated RegulatorApproval approvals = 2;
+  string timestamp = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PendingIssue\")";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message IssueTokenRequest {
+  IssueTokens issue = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated RequestActor actors = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"IssueTokenRequest\")";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message IssueTokens {
+  string operationId = 1;
+  string timestamp = 2;
+  repeated IssueToken tokens = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"IssueTokens\")";
+}
+
+message IssueToken {
+  string tokenId = 1; //[(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenOwner owner = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenContent body = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  RelatedDealReference relatedDealRef = 4  [(scalapb.field).no_box = true, (scalapb.field).required = true];   // in case this issue is related to some deal leg - here is the reference
+  bytes extra = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"IssueToken\")";
+}
+
+message RelatedDealReference {
+  int32 dealIndex = 1;
+  int32 tokenLegIndex = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RelatedDealReference\")";
+}
+
+message SignedTokenChangeRequest {
+  TokenChangeRequest tokenChangeRequest = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedTokenChangeRequest\")";
+}
+
+message RegulatorSignedTokenChangeRequest {
+  TokenChangeRequest tokenChangeRequest = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  MemberSignature memberSignature = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];         // encrypted MemberSignature bytes ordered
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedTokenChangeRequestRegulatory\")";
+}
+
+message SignedTokenMergeRequest {
+  TokenMergeRequest tokenMergeRequest = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated bytes signatures = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedTokenMergeRequest\")";
+}
+
+
+message TokenMergeRequest {
+  string operationId = 1;
+  string timestamp = 2;
+  repeated string tokens = 3 ;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenMergeRequest\")";
+}
+
+message TokenMergeResponse {
+  TokenAdded added = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated string toDelete = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenMergeResponse\")";
+}
+
+message TokenChangeRequestSmartContract {
+  string toChange = 1;
+  repeated TokenToCreate toCreate = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenChangeRequestSmartContract\")";
+}
+
+message TokenToCreate {
+  string id = 1;
+  string value = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenToCreate\")";
+}
+
+message TokenChangeRequest {
+  string operationId = 1;
+  string timestamp = 2;
+  string tokenId = 3;
+  repeated string amounts = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenChangeRequest\")";
+}
+
+message TokenChangeResponse {
+  repeated string deleted = 1;
+  repeated TokenAdded added = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenChangeResponse\")";
+}
+
+
+message TokenAdded {
+  string tokenId = 1;
+  TokenOwner owner = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenContent tokenContent = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenRestrictions restrictions = 4 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenAdded\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+//
+// Atomic exchange request
+//
+
+message PendingDeal {
+  DealRequest deal = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true]; // the deal, see Deal
+  repeated RegulatorApproval approvals = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PendingDeal\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message DealRejectedBySmartContract {
+  DealRequest dealRequest = 1[(scalapb.field).no_box = true, (scalapb.field).required = true];
+  string reason = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DealRejectedBySmartContract\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message DealRequest {
+  Deal deal = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true]; // the deal, see Deal
+
+  repeated OwnerSignature ownerSignatures = 2;
+  repeated OwnerSignature recipientSignatures = 3;
+
+  repeated RequestActor actors = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DealRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message Deal {
+  string operationId = 1;
+  string timestamp = 2;
+  string dealId = 3;                    // some deal id
+  repeated DealLeg legs = 4;            // id -> new owner
+  bytes extra = 5;                      // @see DealExtraData
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Deal\")";
+
+}
+
+
+message DealLeg {
+  string tokenId = 1;
+  TokenOwner newOwner = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenOwner previousOwner = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  RelatedDealReference relatedDealRef = 4 [(scalapb.field).no_box = true, (scalapb.field).required = true];   // in case this leg is related to some other deal leg - it's reference to that deal
+  repeated string fields = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DealLeg\")";
+}
+
+
+// extra information provided by participants for this deal
+message DealExtraData {
+  repeated DealMember members = 1;
+  repeated LegInfo legs = 2;
+  bytes extra = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DealExtraData\")";
+}
+
+message DealMember {
+  string id = 1; // participant id (memberId)
+  repeated SignedEndorsement endorsements = 2; // endorsements provided by member
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DealMember\")";
+}
+
+message LegInfo {
+  int32 from = 1; // index of @DealMember in @DealExtraData.members
+  int32 to = 2; // index of @DealMember in @DealExtraData.members
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"LegInfo\")";
+}
+
+message AcceptTokenRequest {
+  string transactionId = 1;
+  repeated OwnerSignature dealSignatures = 2;
+  bytes memberSignature = 3;  // @see MemberSignature
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"AcceptTokenRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message PendingAccept {
+  string transactionId = 1;
+  DealRequest dealRequest = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PendingAccept\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+//
+// Burn token
+//
+
+message SignedBurnRequest {
+  BurnRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];   // request
+  string acceptedAt = 3;
+  repeated OwnerSignature signatures = 4;
+  // TODO: repeated RequestActor actors
+  bytes memberSignature = 5;  // @see MemberSignature
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedBurnRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message BurnRequest {
+  string operationId = 1;
+  string timestamp = 2;
+  repeated string tokens = 3;  // public IDs of tokens
+  bytes extra = 4;              // encrypted BurnExtra
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"BurnRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message  BurntToken {
+  string tokenId = 1;
+  int32 status = 2;
+  TokenOwner lastOwner = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated string operations = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"BurntToken\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message BurnExtraData {
+  repeated SignedEndorsement endorsements = 1;
+  bytes extra = 2;
+  repeated string extraFields = 3;
+  string memberID = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"BurnExtraData\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message PendingBurn {
+  SignedBurnRequest burnRequest = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated TokenOwner owners = 2;
+  repeated RegulatorApproval approvals = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PendingBurn\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message BurnResponse {
+  SignedBurnRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated BurntTokenData tokens = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"BurnResponse\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message BurntTokenData {
+  TokenContent content = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenRestrictions restrictions = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenOwner owner = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"BurntTokenData\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+//
+//
+//
+
+message OperationEffect {
+  repeated IssueTokenRequest issued = 1;
+  repeated PendingIssue pendingIssues = 2;
+
+  repeated DealRequest transferred = 3;
+  repeated PendingAccept pendingAccepts = 8;
+  repeated PendingDeal pendingDeals = 6;
+
+  repeated PendingBurn pendingBurns = 7;
+  repeated BurnResponse burned = 4;
+
+  repeated TokenChangeResponse change = 10;
+
+  repeated TokenMergeResponse merge = 9;
+
+  repeated SmartContractState smartContractUpdates = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"OperationEffect\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Memberships info section
+// =====================================================================================================================
+
+message RegisterMemberRequest {
+  MemberInformation memberInformation = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  string memberId = 2;   // who signs this request
+  bytes signature = 3;  //signature on bytes of memberInformation
+  int64 block = 4;    // number of block, when member was registered. From this block wallets will start sync.
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RegisterMemberRequest\")";
+
+}
+
+message MemberInformation {
+  string id = 1;
+  bytes signingPublic = 2;      // signing public cert
+  bytes encryptionPublic = 3;   // encryption public cert
+  bytes accessPublic = 4;       // access key
+
+  bool isAdmin = 5;             // is this member authorized to manage members list
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"MemberInformation\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message UpdateMemberInformationRequest {
+  MemberInformation update = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  MemberSignature signature = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"UpdateMemberInformationRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message MemberSignature {
+  string memberId = 1;  // the member id
+  bytes value = 2;      // signature bytes
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"MemberSignature\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+
+// =====================================================================================================================
+// Exchange
+// =====================================================================================================================
+
+message PutOfferRequest {
+  string offerOwner = 1 ;
+  TokenDescription supply = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenDescription demand = 3  [(scalapb.field).no_box = true, (scalapb.field).required = true];
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PutOfferRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message Offer {
+  string id = 1;
+  string owner = 2 ;
+  TokenDescription supply = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenDescription demand = 4  [(scalapb.field).no_box = true, (scalapb.field).required = true];
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Offer\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenDescription {
+  bytes tokenType = 1;
+  repeated TokenFieldValue content = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenDescription\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenFieldValue {
+  int32 index = 1;
+  string value = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenFieldValue\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Regulatory section
+// =====================================================================================================================
+
+message TokenFreezeRequest {
+  string regulatorId = 1;
+  string restrictionId = 2;
+  bool freeze = 3;
+  bytes signature = 4;
+  repeated string tokenIds = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenFreezeRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message RegulatorBurnRequest {
+  BurnRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  MemberSignature signature = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true]; // regulator signature
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RegulatoryBurnRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message RegulatorTransferRequest {
+  Deal deal = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];                   // the deal, see Deal
+  MemberSignature signature = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];  // regulator signature
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RegulatorTransferRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+// =====================================================================================================================
+// Messaging section
+// =====================================================================================================================
+
+message SignedPayload {
+  bytes data = 1;
+  bytes signature = 2;
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedPayload\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message GenericMessage {
+  int32 systemId = 1;
+  int32 messageType = 2;
+  bytes data = 3;
+
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"GenericMessage\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  //option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+message Message {
+  string from = 1;
+  string to = 2;
+  bytes payload = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Message\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message MessageRequest {
+  Message message = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  string txId = 2;      // id of transaction in which message was published
+  string timestamp = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"MessageRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message MemberMessages {
+  string to = 1;
+  string from = 2;
+  string id = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"MemberMessages\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+/*
+ * Proposal to transfer token (from sender to receiver of the message)
+ */
+message TransferProposal {
+  string operationId = 1;
+  string timestamp = 2;
+
+  string from = 3;
+  string tokenType = 4;
+  repeated string content = 5;
+  bytes extraData = 6;
+  repeated SignedEndorsement endorsements = 7;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TransferProposal\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+/*
+ * Request for a token.
+ * This message should be used to:
+ *  - Request someone to send you a token
+ *  - Reply to [[TransferProposal]]
+ *  - Request issuer to issue a token
+ */
+message TokenRequest {
+  string operationId = 1;
+  string timestamp = 2;
+
+  string from = 3;
+  string tokenType = 4;
+  repeated string content = 5;
+  bytes address = 6;
+  bytes extraData = 7;
+  repeated SignedEndorsement endorsements = 8;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+
+  // enable use as operation data:
+  option (scalapb.message).extends = "ru.sberbank.blockchain.cnft.model.OperationData";
+}
+
+/**
+ * TODO: add description
+ */
+message CancelTokenRequest {
+  bytes address = 1;
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"CancelTokenRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+/*
+ * Request to issuer for particular token
+ */
+message IssueRequest {
+  string tokenId = 1;
+  TokenOwner owner = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  TokenContent content = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  string to = 4;
+  bytes extra = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"IssueRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message IssueExtraData {
+  string memberID = 1;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"IssueExtraData\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+/**
+ * TODO: add description
+ */
+message ApplyForOffer {
+  string offerId = 1;
+  string dealId = 2;
+  string signedToken = 3;
+  bytes buyerTokenPublicKey = 4;
+  string buyerOrgName = 5;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"ApplyForOfferRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+/**
+ * TODO: add description
+ */
+message ApproveOffer {
+  string offerId = 1;
+  string signedToken = 2;
+  DealRequest dealRequest = 3  [(scalapb.field).no_box = true, (scalapb.field).required = true];
+
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"ApproveOfferRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Data feed
+// =====================================================================================================================
+
+message DataFeed {
+  string id = 1;
+  string owner = 2;
+  repeated DescriptionField description = 3;
+  repeated FieldMeta fields = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DataFeed\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SignedDataFeed {
+  DataFeed dataFeed = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedDataFeed\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message DataFeedValue {
+  string id = 1; //Feed Identifier
+  repeated string content = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DataFeedValue\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message FeedValueRequest {
+  repeated DataFeedValue feedValues = 1;
+  bytes signature = 2;
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"FeedValueRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message FeedType {
+  repeated FieldMeta attributes = 1;
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"FeedType\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Smart Contract
+// =====================================================================================================================
+
+message SmartContract {
+  string id = 1;
+  string issuerId = 2;
+  string templateId = 3;
+  repeated string attributes = 4;
+  repeated string feeds = 5;
+
+  repeated RegulatorCapabilities regulators = 6;
+  repeated SignedEndorsement endorsements = 7;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SmartContract\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SignedSmartContract {
+  SmartContract contract = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedSmartContract\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SmartContractAcceptedDeals{
+  string id = 1;
+  repeated AcceptedDeal deal = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SmartContractAcceptedTokens\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message AcceptedDeal {
+  DealRequest deal = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated AcceptedToken tokens = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SmartContractToken\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message AcceptedToken {
+  string id = 1;
+  TokenOwner from = 2  [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  int32 leg = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"AcceptedToken\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SmartContractState {
+  string id = 1;
+  repeated string state = 2;
+  bool alive = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SmartContractState\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SmartContractRegulation {
+  string id = 1;
+  repeated Approve approves = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SmartContractRegulation\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SCRegulationRequest {
+  string contractId = 1;
+  string regulatorId = 2;
+  string reason = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SCRegulationRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message SignedSCRegulationRequest {
+  SCRegulationRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedSCRegulationRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message Approve {
+  string regulatorId = 1;
+  bool approved = 2;
+  string reason = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Approve\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Smart Contract Template
+// =====================================================================================================================
+
+message SmartContractTemplate {
+  string id = 1;
+  repeated FeedType feeds = 2;
+  repeated DescriptionField description = 3;
+  repeated FieldMeta attributes = 4;
+  repeated FieldMeta stateModel = 5;
+  repeated RequiredDealFields requiredDealFields = 6;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SmartContractTemplate\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+//message StringSeq {
+//  repeated string values = 1;
+//  //  export this struct to JS
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"StringSeq\")";
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+//}
+
+message RequiredDealFields {
+  string attributeId = 1;
+  repeated FieldMeta fields = 6;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RequiredDealField\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+// =====================================================================================================================
+// Endorsements
+// =====================================================================================================================
+
+message SignedEndorsement {
+  Endorsement endorsement = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedEndorsement\")";
+}
+
+message Endorsement {
+  string memberId = 1;
+  string regulatorId = 2;
+  bytes data = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Endorsement\")";
+}
+
+// =====================================================================================================================
+// Public Endorsements
+// =====================================================================================================================
+
+message SignedPublicEndorsement {
+  PublicEndorsement endorsement = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedPublicEndorsement\")";
+}
+
+message PublicEndorsement {
+  string memberId = 1;
+  string endorserId = 2;
+  string kindId = 3;
+  bytes data = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"PublicEndorsement\")";
+}
+
+// request endorsement from some member
+
+
+message SignedEndorsementRequest {
+  EndorsementRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedEndorsementRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message EndorsementRequest {
+  bytes data = 1;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"EndorsementRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+//message SignedApproveEndorsementRequest {
+//  ApproveEndorsementRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+//  bytes signature = 2;
+//
+//  //  export this struct to JS
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedApproveEndorsementRequest\")";
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+//}
+
+message SignedRejectEndorsementRequest {
+  RejectEndorsementRequest request = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  bytes signature = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"SignedRejectEndorsementRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+//message ApproveEndorsementRequest {
+//  string memberId = 1;
+//  SignedEndorsement signedEndorsement = 3 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+//
+//  //  export this struct to JS
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"ApproveEndorsementRequest\")";
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+//}
+
+message RejectEndorsementRequest {
+  string memberId = 1;
+  string regulatorId = 2;
+  string reason = 3;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RejectEndorsementRequest\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+//message Endorsements {
+//  repeated Endorsement endorsements = 1 ;
+//
+//  //  export this struct to JS
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Endorsements\")";
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+//}
+//
+//message Endorsement {
+//  string regulatorId = 1;
+//  SignedEndorsement endorsement = 2 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+//
+//  //  export this struct to JS
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Endorsement\")";
+//  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+//}
+
+// =====================================================================================================================
+// Genes
+// =====================================================================================================================
+
+message DNA {
+  repeated Gene emission = 1;
+  repeated Gene transfer = 2;
+  repeated Gene burn = 3;
+  repeated Gene change = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"DNA\")";
+}
+
+message Gene {
+  string id = 1;
+  repeated string parameters = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Gene\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+// =====================================================================================================================
+// Profile
+// =====================================================================================================================
+
+message Profile {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string avatar = 4;
+  string background = 5;
+  string memberId = 6;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Profile\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message ProfileTokens {
+  string profileId = 1;
+  repeated string tokenIds = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"ProfileTokens\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenProfiles {
+  string tokenId = 1;
+  repeated model.TokenProfileInfo tokenProfileInfos = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenProfiles\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message TokenProfileInfo {
+  string profileId = 1;
+  string name = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenProfileInfo\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+// =====================================================================================================================
+// Filters
+// =====================================================================================================================
+
+message TokenTypeFilter {
+  string changeGeneId = 1;
+  bool negation = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"TokenTypeFilter\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+// =====================================================================================================================
+// Operations
+// =====================================================================================================================
+
+message OperationState {
+  string timestamp = 1;
+  string state = 3;
+  bytes data = 4;
+
+  string block = 5;
+  string txId = 6;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"OperationState\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message Operation {
+  string operationId = 1;
+  repeated OperationState history = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"Operation\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message OperationHistory {
+  Operation data = 1 [(scalapb.field).no_box = true, (scalapb.field).required = true];
+  repeated TokenOwner addresses = 2;
+  repeated string regulators = 3;
+  repeated string issuers = 4;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"OperationHistory\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+// =====================================================================================================================
+// Data migration
+// =====================================================================================================================
+
+message PlatformVersion {
+  string version = 1;
+  int64 height = 2;
+}
+
+message SignedDataMigrationRequest{
+  string id = 1;
+  string previousVersion = 2;
+  string newVersion = 3;
+  bytes burntdeleted = 4;
+  bytes signatureBurntDeleted = 5;
+  bytes history = 6;
+  bytes signatureHistory = 7;
+  bytes tokenIdMap = 8;
+  int64 blockNum = 9;
+}
+
+message DataMigrationBurntDeleted {
+  repeated BurntToken data = 1;
+}
+
+message DataMigrationOperationHistory {
+  repeated OperationHistory operationHistory = 1;
+}
+
+message TokenIdChangeEntry {
+  string v31 = 1;
+  string v38 = 2;
+}
+message TokenIdChangeMap {
+  repeated TokenIdChangeEntry entries = 1;
+}

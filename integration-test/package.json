@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "@cucumber/cucumber": "^7.3.1",
+    "bn.js": "^5.2.0",
+    "elliptic": "^6.5.4",
+    "wallet-lib": "file:../wallet-lib/js/target/npm",
+    "xmlhttprequest": "^1.8.0"
+  },
+  "scripts": {
+    "chain-gettokens": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/chain-gettokens.feature",
+    "ico": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/ico.feature",
+    "datafeed": "cucumber-js --require='src/test/js/*.js' src/test/feature/datafeed.feature",
+    "scregulation": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/sc-regulation.feature",
+    "test": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/test.feature",
+    "transfer": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/transfer.feature",
+    "onboarding": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/onboarding.feature",
+    "restoreWallet": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/restore-wallet.feature",
+    "profile": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/profile.feature",
+    "filters": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/filters.feature",
+    "token-types": "cucumber-js --require='src/test/js/*.js' src/test/resources/feature/token-types.feature"
+  }
+}

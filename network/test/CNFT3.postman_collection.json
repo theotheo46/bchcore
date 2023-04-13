@@ -1,0 +1,51 @@
+{
+	"info": {
+		"_postman_id": "61d3ec0a-a001-4feb-b2d8-cf968db9fac0",
+		"name": "CNFT3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "block number",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8981/block-number",
+					"host": [
+						"localhost"
+					],
+					"port": "8981",
+					"path": [
+						"block-number"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "block events",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8981/block-events?blockNumber=12",
+					"host": [
+						"localhost"
+					],
+					"port": "8981",
+					"path": [
+						"block-events"
+					],
+					"query": [
+						{
+							"key": "blockNumber",
+							"value": "12"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

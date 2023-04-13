@@ -1,0 +1,17 @@
+@startuml
+
+!include styles.puml
+
+participant "Client 1 " as C1
+participant "Bank " as B
+participant "Client 2 " as C2
+
+C1 -> B: Request reserve
+B -> C1: Reserve response with SignedToken
+C1 -> C2: Request destination public key for money
+C2 -> C1: Public key
+C1 -> B: Publish deal (transfer of token to Client 2)\t
+B -> C1: OK
+C2 -> B: Request burn for token
+
+@enduml

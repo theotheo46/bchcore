@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -e
+#FILE_PATH=$0
+#if [[ "$(uname)" == "Darwin" ]]; then
+#  DIR=$(greadlink -f ${FILE_PATH})
+#else
+#  DIR=$(readlink -f ${FILE_PATH})
+#fi
+#BASE_DIR=$(dirname $(dirname $(dirname $DIR)))
+#
+#
+#BUILD_OUTPUT_DIR="$1"
+#RUN_METADATA_DIR="$2"
+#
+#export CORE_PEER_TLS_ENABLED=true
+#export CORE_PEER_TLS_ROOTCERT_FILE=$RUN_METADATA_DIR/root.pem
+#export CORE_TLS_CLIENT_KEY_PATH=$RUN_METADATA_DIR/clientkey.pem
+#export CORE_TLS_CLIENT_CERT_PATH=$RUN_METADATA_DIR/clientcert.pem
+#
+#cat $RUN_METADATA_DIR/chaincode.json > $BUILD_OUTPUT_DIR/chaincode.json
+#
+#nohup $BUILD_OUTPUT_DIR/bin/chaincode-impl $RUN_METADATA_DIR/chaincode.json > $BASE_DIR/logs/chaincode.log &
+tail -f

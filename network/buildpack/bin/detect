@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+#set -e
+#
+#CHAINCODE_METADATA_DIR="$2"
+#
+## use jq to extract the chaincode type from metadata.json and exit with
+## success if the chaincode type is golang
+#exit 0
+#if [ "$(jq -r .type "$CHAINCODE_METADATA_DIR/metadata.json" | tr '[:upper:]' '[:lower:]')" = "external" ]; then
+#    exit 0
+#fi
+
+exit 0

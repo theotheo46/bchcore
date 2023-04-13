@@ -1,0 +1,19 @@
+table, th, td {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  border-collapse: collapse;
+  border: 1px solid #E1EFD1;
+  padding: 3px;
+}
+
+table {
+  width: 100%;
+}
+
+th {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  text-align: left;
+  background-color: #E1EFD1;
+  color: black;
+}

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wallet full test</title>
+
+    <!-- 1.    define "exports" object for the correct module load -->
+    <script>var exports = {};</script>
+    <!-- 2.    load the module: -->
+    <script type="text/javascript" src="node_modules/wallet-lib/main.js"></script>
+    <!-- 3.    export module functionality to global scope: -->
+    <script>for(var k in exports) window[k] = exports[k];</script>
+
+
+    <script type="text/javascript">
+
+        function promiseTimeout(ms, promise) {
+            let timeout = new Promise((resolve, reject) => {
+                let id = setTimeout(() => {
+                    clearTimeout(id);
+                    reject('Timed out in ' + ms + 'ms.')
+                }, ms)
+            })
+
+            return Promise.race([
+                promise,
+                timeout
+            ])
+        }
+
+        function arrayBufferToBase64(buffer) {
+            var binary = '';
+            var bytes = new Uint8Array(buffer);
+            var len = bytes.byteLength;
+            for (var i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+
+        function base64ToArrayBuffer(base64) {
+            var binary_string = window.atob(base64);
+            var len = binary_string.length;
+            var bytes = new Uint8Array(len);
+            for (var i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        const walletListener = {
+            async onTokenTypeRegistered(wallet, tokenTypes) {
+                console.log(`Got event: onTokenTypeRegistered ${tokenTypes}`);
+                waiter.gotEvent(wallet, onTokenTypeRegistered, tokenTypes);
+                return Promise.resolve();
+            },
+
+            async onProfilesCreated(wallet, createdProfilesIds) {
+                console.log(`Got event: onProfilesCreated`);
+                if (createdProfilesIds.length !== 0) {
+                    waiter.gotEvent(wallet, onProfilesCreated, createdProfilesIds);
+                }
+                return Promise.resolve();
+            },
+
+            async onTokenListChanged(wallet, tokensAdded, tokensIdsRemoved) {
+                console.log(`Got event: onTokenListChanged`);
+                if (tokensAdded.length !== 0) {
+                    waiter.gotEvent(wallet, onTokenListChanged, tokensAdded, {status: "added"});
+                }
+
+                if (tokensIdsRemoved.length !== 0) {
+                    waiter.gotEvent(wallet, onTokenListChanged, tokensIdsRemoved, {status: "removed"});
+                }
+
+                return Promise.resolve();
+            },
+
+            async onOffersChanged(wallet, newOffers, closedOffers) {
+                console.log(`Got event: onOffersChanged`);
+                if (newOffers.length !== 0) {
+                    waiter.gotEvent(wallet, onOffersChanged, newOffers, {status: "newOffer"});
+                }
+
+                if (closedOffers.length !== 0) {
+                    waiter.gotEvent(wallet, onOffersChanged, closedOffers, {status: "closedOffer"});
+                }
+
+                return Promise.resolve();
+            },
+
+            async onChangeRequested(wallet, requests) {
+                console.log(`Got event: onChangeRequested`);
+                if (requests.length !== 0) {
+                    waiter.gotEvent(wallet, onChangeRequested, requests);
+                }
+                return Promise.resolve();
+            },
+
+            async onIssuedTokensUpdated(wallet, addedSeq, swappedSeq, burnedSeq) {
+                console.log(`Got event: onIssuedTokenUpdates`);
+                if (addedSeq.length !== 0) {
+                    waiter.gotEvent(wallet, onIssuedTokensUpdated, addedSeq, {status: "added"});
+
+                }
+
+                if (swappedSeq.length !== 0) {
+                    waiter.gotEvent(wallet, onIssuedTokensUpdated, swappedSeq, {status: "swapped"});
+                }
+
+                if (burnedSeq.length !== 0) {
+                    waiter.gotEvent(wallet, onIssuedTokensUpdated, burnedSeq, {status: "burned"});
+                }
+
+
+                return Promise.resolve();
+            },
+
+            // Messages
+
+            async onTransferProposed(wallet, request) {
+                console.log(`Got event: onTransferProposed`);
+                waiter.gotEvent(wallet, onTransferProposed, request);
+
+                return Promise.resolve();
+            },
+
+            async onTokenRequested(wallet, requests) {
+                console.log(`Got token requests: ${requests}`);
+                if (requests.length !== 0) {
+                    waiter.gotEvent(wallet, onTokenRequested, requests);
+                }
+                return Promise.resolve();
+            },
+
+            async onIssueRequested(wallet, request) {
+                console.log(`Got event: onIssueRequest`);
+                waiter.gotEvent(wallet, onIssueRequested, request);
+                return Promise.resolve();
+            },
+
+            async onApplyForOffer(wallet, request) {
+                console.log(`Got event: onApplyForOffer`);
+                waiter.gotEvent(wallet, onApplyForOffer, request);
+                return Promise.resolve();
+            },
+
+            async onApproveOffer(wallet, request) {
+                console.log(`Got event: onApproveOffer`);
+                waiter.gotEvent(wallet, onApproveOffer, request);
+                return Promise.resolve();
+            },
+        };
+
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            Object.keys(walletListener).forEach(function (item) {
+                window[item] = item;
+            });
+
+            document.getElementById("registerTokenTypeTest").addEventListener("click", function (event) {
+                registerTokenTypeTest(wallet1);
+
+            });
+
+            document.getElementById("createProfileTest").addEventListener("click", function (event) {
+                createProfileTest(wallet1);
+            });
+
+            document.getElementById("issueTokenTest").addEventListener("click", function (event) {
+                issueTokenTest(wallet1);
+            });
+
+            document.getElementById("requestIssueTest").addEventListener("click", function (event) {
+                requestIssueTest(wallet1, wallet2);
+            });
+
+            document.getElementById("requestTokenTest").addEventListener("click", function (event) {
+                requestTokenTest(wallet1, wallet2);
+            });
+
+            document.getElementById("offerTest").addEventListener("click", function (event) {
+                offerTest(wallet1, wallet2);
+            });
+
+            document.getElementById("createWallets").addEventListener("click", function (event) {
+                createWallets();
+            });
+
+            document.getElementById("burnTokenTest").addEventListener("click", function (event) {
+                burnTokenTest(wallet1);
+            });
+
+            document.getElementById("getIdentity").addEventListener("click", function (event) {
+                getIdentity(wallet1);
+            });
+
+            document.getElementById("createAddress").addEventListener("click", function (event) {
+                createAddress(wallet1);
+            });
+
+            document.getElementById("listProfiles").addEventListener("click", function (event) {
+                listProfiles(wallet1);
+            });
+
+            document.getElementById("listTokenTypes").addEventListener("click", function (event) {
+                listTokenTypes(wallet1);
+            });
+        });
+
+
+        class Waiter {
+            constructor() {
+                this.waiterList = {};
+                this.timeout = 10000;
+            }
+
+            getWaitersByEventAndIdentity(identityWaiter, eventName) {
+                let waiters = {};
+                const keys = Object.keys(this.waiterList);
+                for (let i = 0; i < keys.length; i++) {
+                    let waiterId = keys[i];
+                    if ((this.waiterList[waiterId].event === eventName) && (this.waiterList[waiterId].identityWaiter === identityWaiter)) {
+                        let waiter = {};
+                        waiter[waiterId] = {...this.waiterList[waiterId]};
+                        waiters = {...waiters, ...waiter}
+                    }
+                }
+                return waiters
+            }
+
+            async gotEvent(wallet, eventName, eventContent, attrs) {
+                let identityWaiter = await wallet.getIdentity;
+                let waiters = this.getWaitersByEventAndIdentity(identityWaiter, eventName);
+                const keys = Object.keys(waiters);
+                let classPointer = this;
+                for (let i = 0; i < keys.length; i++) {
+                    let waiterId = keys[i];
+                    let waiter = this.waiterList[waiterId];
+
+                    if (eventName === onTokenTypeRegistered) {
+                        let tokenType = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (tokenType === item.typeId) {
+                                classPointer.waiterList[waiterId].resolve(item);
+                            }
+                        })
+                    }
+
+                    if (eventName === onProfilesCreated) {
+                        document.log(`onProfilesCreated: resolving event content`)
+                        eventContent.forEach(function (item) {
+                            classPointer.waiterList[waiterId].resolve(item);
+                        })
+                    }
+
+                    if (eventName === onIssueRequested) {
+                        let tokenType = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (tokenType === item.message.token.tokenType) {
+                                classPointer.waiterList[waiterId].resolve(item);
+                            }
+                        })
+                    }
+
+                    if (eventName === onTokenRequested) {
+                        let tokenType = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (tokenType === item.message.tokenType) {
+                                classPointer.waiterList[waiterId].resolve(item);
+                            }
+                        })
+                    }
+
+                    if (eventName === onTokenListChanged) {
+                        let tokenId = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (tokenId === item) {
+                                classPointer.waiterList[waiterId].resolve({tokenId: item, ...attrs});
+                            }
+                        })
+                    }
+
+                    if (eventName === onIssuedTokensUpdated) {
+                        let content = waiter.content;
+                        eventContent.forEach(function (item) {
+                            let toCompare;
+                            if (attrs.status === "added") {
+                                toCompare = item.tokenBody.tokenId
+                            }
+
+                            if (attrs.status === "swapped") {
+                                toCompare = item.deal.dealId
+                            }
+
+                            if (attrs.status === "burned") {
+                                toCompare = item.signedToken.tokenBody.tokenId
+                            }
+
+                            attrs["id"] = toCompare
+
+                            if (content === toCompare) {
+                                classPointer.waiterList[waiterId].resolve({data: item, ...attrs});
+                            }
+                        })
+                    }
+
+                    if (eventName === onOffersChanged) {
+                        let offerId = waiter.content;
+                        eventContent.forEach(function (item) {
+                            let offerIdToCompare;
+                            if (attrs.status === "newOffer") {
+                                offerIdToCompare = item.id
+                            }
+
+                            if (attrs.status === "closedOffer") {
+                                offerIdToCompare = item
+                            }
+                            if (offerId === offerIdToCompare) {
+                                classPointer.waiterList[waiterId].resolve({offer: item, ...attrs});
+                            }
+                        })
+                    }
+
+                    if (eventName === onApplyForOffer) {
+                        let offerId = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (offerId === item.message.offerId) {
+                                classPointer.waiterList[waiterId].resolve({offer: item});
+                            }
+                        })
+                    }
+                    if (eventName === onApproveOffer) {
+                        let offerId = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (offerId === item.message.offerId) {
+                                classPointer.waiterList[waiterId].resolve({offer: item});
+                            }
+                        })
+                    }
+
+                    if (eventName === onChangeRequested) {
+                        let tokenId = waiter.content;
+                        eventContent.forEach(function (item) {
+                            if (tokenId === item.signedToken.tokenBody.tokenId) {
+                                classPointer.waiterList[waiterId].resolve(item);
+                            }
+                        })
+                    }
+                }
+                return Promise.resolve()
+            }
+
+            createPromise() {
+
+                let outsideResolve;
+                let outsideReject;
+                let promise = new Promise(function (resolve, reject) {
+                    outsideResolve = resolve;
+                    outsideReject = reject;
+                });
+
+                let promiseTimer = promiseTimeout(this.timeout, promise)
+
+                return {resolve: outsideResolve, reject: outsideReject, promise: promiseTimer}
+
+            }
+
+            addWaiter(identityWaiter, event, content) {
+                let outsidePromise = this.createPromise();
+                const waiterId = randStr(0);
+                this.waiterList[waiterId] = {
+                    event: event,
+                    content: content,
+                    identityWaiter: identityWaiter, ...outsidePromise,
+                    incomingData: undefined
+                };
+                return waiterId
+            }
+
+            async onTokenTypeRegisteredWait(identityWaiter, tokenType) {
+                let waiterId = this.addWaiter(identityWaiter, onTokenTypeRegistered, tokenType);
+
+                return await this.waiterList[waiterId].promise.then(registredTokenType => {
+                    delete this.waiterList[waiterId];
+                    document.log(`${onTokenTypeRegistered}\ntokenType:\n${registredTokenType.typeId} - OK`)
+                    return Promise.resolve(registredTokenType.typeId);
+                }, reason => {
+                    document.log(`${onTokenTypeRegistered}\ntokenType:\n${tokenType} - Fail \nerror message: ${reason}`)
+                    return Promise.reject(reason);
+                })
+            }
+
+            async onProfilesCreatedWait(waiterIdentity, profile) {
+                let waiterId = this.addWaiter(waiterIdentity, onProfilesCreated, profile);
+                return await this.waiterList[waiterId].promise.then(createdProfile => {
+                    document.log(`${onProfilesCreated}:\n${arrayBufferToBase64(createdProfile)} - OK`)
+                    delete this.waiterList[waiterId];
+                    return Promise.resolve(createdProfile);
+                }, reason => {
+                    document.log(`${onProfilesCreated}:\n${profile} - Fail \nerror message: ${reason}`)
+                    return Promise.reject(reason);
+                })
+            }
+
+            async onIssueRequestedWait(waiterIdentity, tokenType) {
+                let waiterId = this.addWaiter(waiterIdentity, onIssueRequested, tokenType);
+                return await this.waiterList[waiterId].promise.then(issueRequestMessage => {
+                    delete this.waiterList[waiterId];
+                    document.log(`${onIssueRequested}\ntoken ${issueRequestMessage.message.token.tokenId}\nfrom: ${issueRequestMessage.from.name}\nto: ${waiterIdentity}  - OK`)
+                    return Promise.resolve(issueRequestMessage);
+                }, reason => {
+                    document.log(`${onIssueRequested}\ntokenType: ${tokenType} - Fail \nerror message: ${reason}`)
+                    return Promise.reject(reason);
+                })
+            }
+
+            async onTokenRequestedWait(waiterIdentity, tokenType) {
+                let waiterId = this.addWaiter(waiterIdentity, onTokenRequested, tokenType);
+                return await this.waiterList[waiterId].promise.then(tokenRequestMessage => {
+                    document.log(`${onTokenRequested}\ntokenType:\n${tokenRequestMessage.message.tokenType}\nfrom: ${tokenRequestMessage.from.name}\nto: ${waiterIdentity}  - OK`)
+                    delete this.waiterList[waiterId];
+                    return Promise.resolve(tokenRequestMessage);
+                }, reason => {
+                    document.log(`${onTokenRequested}\ntokenType:\n${tokenType}- Fail \nerror message: ${reason}`)
+                    return Promise.reject(reason);
+                })
+            }
+
+            async onTokenListChangedWait(waiterIdentity, tokenId) {
+                let waiterId = this.addWaiter(waiterIdentity, onTokenListChanged, tokenId);
+                return await this.waiterList[waiterId].promise.then(tokenId => {
+                        document.log(`${onTokenListChanged}\ntokenId:\n${tokenId.tokenId} has new status: ${tokenId.status}  - OK`)
+                        delete this.waiterList[waiterId];
+                        return Promise.resolve(tokenId);
+                    }, reason => {
+                        document.log(`${onTokenListChanged} - Fail \nerror message: ${reason}`)
+                    }
+                )
+            }
+
+            async onIssuedTokensUpdatedWait(waiterIdentity, content) {
+                let waiterId = this.addWaiter(waiterIdentity, onIssuedTokensUpdated, content);
+                return await this.waiterList[waiterId].promise.then(content => {
+                        if (content.status === "swapped") {
+                            document.log(`${onIssuedTokensUpdated}\ndealId:\n${content.id} has new status: ${content.status}  - OK`)
+                        } else {
+                            document.log(`${onIssuedTokensUpdated}\ntokenId:\n${content.id} has new status: ${content.status}  - OK`)
+                        }
+                        delete this.waiterList[waiterId];
+                        return Promise.resolve(content);
+                    }, reason => {
+                        document.log(`${onIssuedTokensUpdated} - Fail \nerror message: ${reason}`)
+                    }
+                )
+            }
+
+            async onOffersChangedWait(waiterIdentity, offerId) {
+                let waiterId = this.addWaiter(waiterIdentity, onOffersChanged, offerId);
+                return await this.waiterList[waiterId].promise.then(offer => {
+                        let offerId;
+                        if (offer.status === "newOffer") {
+                            offerId = offer.offer.id
+                        }
+                        if (offer.status === "closedOffer") {
+                            offerId = offer.offer
+                        }
+                        document.log(`${onOffersChanged}\nofferId:\n${offerId} has new status: ${offer.status}  - OK`)
+                        delete this.waiterList[waiterId];
+                        return Promise.resolve(offer);
+                    }, reason => {
+                        document.log(`${onOffersChanged} - Fail \nerror message: ${reason}`)
+                    }
+                )
+            }
+
+            async onApplyForOfferWait(waiterIdentity, offerId) {
+                let waiterId = this.addWaiter(waiterIdentity, onApplyForOffer, offerId);
+                return await this.waiterList[waiterId].promise.then(offer => {
+                        document.log(`${onApplyForOffer}\nofferId:\n${offer.offer.message.offerId} - OK`)
+                        delete this.waiterList[waiterId];
+                        return Promise.resolve(offer.offer);
+                    }, reason => {
+                        document.log(`${onApplyForOffer} - Fail \nerror message: ${reason}`)
+                    }
+                )
+            }
+
+            async onApproveOfferWait(waiterIdentity, offerId) {
+                let waiterId = this.addWaiter(waiterIdentity, onApproveOffer, offerId);
+                return await this.waiterList[waiterId].promise.then(offer => {
+                        document.log(`${onApproveOffer}\nofferId:\n${offer.offer.message.offerId} - OK`)
+                        delete this.waiterList[waiterId];
+                        return Promise.resolve(offer.offer);
+                    }, reason => {
+                        document.log(`${onApproveOffer} - Fail \nerror message: ${reason}`)
+                    }
+                )
+            }
+
+            async onChangeRequestedWait(waiterIdentity, tokenId) {
+                let waiterId = this.addWaiter(waiterIdentity, onChangeRequested, tokenId);
+                return await this.waiterList[waiterId].promise.then(changeOperationRequest => {
+                        document.log(`${onChangeRequested}\nofferId:\n${changeOperationRequest.signedToken.tokenBody.tokenId} - OK`)
+                        delete this.waiterList[waiterId];
+                        return Promise.resolve(changeOperationRequest);
+                    }, reason => {
+                        document.log(`${onChangeRequested} - Fail \nerror message: ${reason}`)
+                    }
+                )
+            }
+
+        }
+
+        let waiter = new Waiter;
+
+        document.log = (html, level = 'info') => {
+            const el = document.createElement('p');
+            el.innerHTML = html;
+            document.body.appendChild(el);
+            switch (level) {
+                case 'warn':
+                    el.style.color = '#c79600';
+                    console.warn(html);
+                    break;
+                case 'err':
+                    el.style.color = '#aa0000';
+                    console.error(html);
+                    break;
+                default:
+                    console.log(html)
+            }
+        }
+
+        function ab2str(buf) {
+            const decoder = new TextDecoder();
+            return decoder.decode(buf);
+        }
+
+        function str2ab(str) {
+            const encoder = new TextEncoder();
+            return encoder.encode(str);
+        }
+
+
+        function clearStorage() {
+            localStorage.clear();
+            document.log('Storage was cleaned', 'warn')
+        }
+
+        function randStr() {
+            return Math.random().toString(36).substring(4);
+        }
+
+        function createWallet() {
+            let cryptoConfig =
+                new CryptographyConfiguration(
+                    CNFTCrypto.webCryptoSign(), // Issuer operations
+                    CNFTCrypto.webCryptoSign(), // Token operations
+                    CNFTCrypto.webCryptoSign(), // Identity operations
+                    CNFTCrypto.webCryptoEncryption() // Encryption operations
+                );
+
+            return CNFT.newWallet(
+                {
+                    "gate": CNFTGateApi.create("http://localhost:8981"),
+                    "store": CNFTStore.localStorage(),
+                    "crypto": cryptoConfig,
+                    "listener": walletListener
+                }
+            );
+
+        }
+
+        async function registerTokenType(wallet, tokenMeta) {
+            return await wallet.registerTokenType(tokenMeta).then(registredTokenType => {
+                document.log(`registerTokenType\ntokenType:\n${registredTokenType} - OK`)
+                return Promise.resolve(registredTokenType)
+            }, reason => {
+                document.log(`registerTokenType\n - Fail \nerror message: ${reason}`)
+                return Promise.resolve(reason)
+            })
+        }
+
+        async function issueToken(wallet, tokenType, tokenContent) {
+            return await wallet.issue(tokenType, tokenContent).then(issuedTokenBody => {
+                document.log(`issueToken:\n${issuedTokenBody} - OK`)
+                return Promise.resolve(issuedTokenBody)
+            }, reason => {
+                document.log(`registerTokenType\n - Fail \nerror message: ${reason}`)
+                return Promise.resolve(reason)
+            })
+        }
+
+
+        async function listTokens(wallet) {
+            let listTokens = await wallet.listTokens;
+            let identity = await wallet.getIdentity;
+            document.log(`${identity} list tokens: `);
+            listTokens.forEach(token => document.log(token.tokenBody.tokenId));
+            return Promise.resolve(listTokens)
+        }
+
+        async function listTokenTypes(wallet) {
+            let tokenTypes = await wallet.listTokenTypes;
+            let identity = await wallet.getIdentity;
+            document.log(`${identity} list token types: `);
+            tokenTypes.forEach(tokenType => document.log(tokenType));
+            return Promise.resolve(tokenTypes)
+        }
+
+        async function getIdentity(wallet) {
+            document.log("getIdentity ...");
+            let identity = await wallet.getIdentity;
+            document.log(`identity: ${arrayBufferToBase64(identity)}`)
+            return Promise.resolve(identity);
+        }
+
+        async function createAddress(wallet) {
+            document.log("createAddress ...");
+            let newAddress = await wallet.createAddress;
+            document.log(`new address: ${arrayBufferToBase64(newAddress)}`)
+            return Promise.resolve(newAddress);
+        }
+
+        async function createProfile(wallet) {
+            let profile = new CreateProfileInfo(
+                "Грамоты на 180 лет",
+                "Подарочные грамоты от Сбера на 180 лет",
+                "Стильная аватарка в base64",
+                "Стильный фон в base64"
+            );
+            return await wallet.createProfile(profile).then(createdProfile => {
+                document.log(`createdProfile:\n${createdProfile} - OK`)
+                return Promise.resolve(createdProfile)
+            }, reason => {
+                document.log(`createdProfile\n - Fail \nerror message: ${reason}`)
+                return Promise.resolve(reason)
+            });
+        }
+
+        async function updateProfile(wallet, address) {
+            let profileInfo = new ProfileInfo(
+                base64ToArrayBuffer(address),
+                "Грамоты на 185 лет",
+                "Подарочные грамоты от Сбера на 185 лет",
+                "Стильная аватарка в base64",
+                "Стильный фон в base64"
+            );
+            return await wallet.updateProfile(profileInfo).then(updatedProfile => {
+                document.log(`updatedProfile:\n${updatedProfile} - OK`)
+                return Promise.resolve(updatedProfile)
+            }, reason => {
+                document.log(`updatedProfile\n - Fail \nerror message: ${reason}`)
+                return Promise.resolve(reason)
+            });
+        }
+
+        async function registerTokenType(wallet, tokenMeta) {
+            return await wallet.registerTokenType(tokenMeta).then(registredTokenType => {
+                document.log(`registerTokenType\ntokenType:\n${registredTokenType} - OK`)
+                return Promise.resolve(registredTokenType)
+            }, reason => {
+                document.log(`registerTokenType\n - Fail \nerror message: ${reason}`)
+                return Promise.resolve(reason)
+            })
+        }
+
+        async function listProfiles(wallet) {
+            document.log("listProfiles ...");
+            let profiles = await wallet.listProfiles;
+            profiles.forEach(profile => {
+                let address = arrayBufferToBase64(profile[Object.keys(profile)[0]])
+                document.log(`address: ${address}`);
+                document.log(profile);
+            });
+            return Promise.resolve(profiles);
+        }
+
+        async function getProfile(wallet, address) {
+            let profile = await wallet.getProfile(base64ToArrayBuffer(address));
+            document.log(profile);
+            return Promise.resolve(profile);
+        }
+
+        async function registerTokenTypeTest(wallet) {
+            const identity = await wallet.getIdentity;
+            const tokenMeta = [new TokenFieldMeta("test", TokenFieldType.Text)];
+            let tokenType = await registerTokenType(wallet, tokenMeta)
+            return await waiter.onTokenTypeRegisteredWait(identity, tokenType)
+        }
+
+        async function createProfileTest(wallet) {
+            let identity = await wallet.getIdentity;
+            let profile = await createProfile(wallet);
+            return await waiter.onProfilesCreatedWait(identity, profile);
+        }
+
+        async function issueTokenTest(wallet) {
+            //const tokenContent = ['{"amount": 42}'];
+            const tokenContent = ["test"];
+
+            let tokenType = await registerTokenTypeTest(wallet);
+            let identity = await wallet.getIdentity;
+            let tokenBody = await issueToken(wallet, tokenType, tokenContent);
+            await waiter.onTokenListChangedWait(identity, tokenBody.tokenId);
+            await waiter.onIssuedTokensUpdatedWait(identity, tokenBody.tokenId);
+            return Promise.resolve(tokenBody)
+        }
+
+        async function requestIssue(wallet, tokenType) {
+            return await wallet.requestIssue(tokenType, Array(), str2ab("Hi there!")).then(requestIssueContent => {
+                document.log(`requestIssue:\n${requestIssueContent} - OK`)
+                return Promise.resolve(requestIssueContent)
+            }, reason => {
+                document.log(`registerTokenType\n - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+        }
+
+        async function issueFor(wallet, memberId, tokenId, idAccess, tokenTypeRequested, content) {
+            return await wallet.issueFor(memberId, tokenId, idAccess, tokenTypeRequested, content).then(issueForContent => {
+                document.log(`requestIssue:\n${issueForContent} - OK`)
+                return Promise.resolve(issueForContent)
+            }, reason => {
+                document.log(`registerTokenType\n - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+        }
+
+        async function requestToken(wallet, identity, tokenType, tokenContent, extraData) {
+            let identityRequester = await wallet.getIdentity;
+            return await wallet.requestToken(identity, tokenType, tokenContent, extraData).then(_ => {
+                document.log(`[requestToken] from ${identityRequester},\nto: ${identity},\ncontent: ${tokenContent},\nextraData: ${ab2str(extraData)}  - OK`)
+                return Promise.resolve()
+            }, reason => {
+                document.log(`[requestToken] - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+        }
+
+        function tokenIdInTokenList(element, index, array) {
+            return element.tokenBody.tokenId === this.tokenId;
+        }
+
+        async function requestIssueTest(wallet1, wallet2) {
+            let tokenType = await registerTokenTypeTest(wallet1);
+            let identity1 = await wallet1.getIdentity;
+            let identity2 = await wallet2.getIdentity;
+            await requestIssue(wallet2, tokenType);
+            let issueRequest = await waiter.onIssueRequestedWait(identity1, tokenType);
+            let memberId = issueRequest.from.name;
+            let tokenId = issueRequest.message.token.tokenId;
+            let idAccess = issueRequest.message.idAccess; // buffer
+            let tokenTypeRequested = issueRequest.message.token.tokenType;
+            let content = issueRequest.message.token.content; // array
+            await issueFor(wallet1, memberId, tokenId, idAccess, tokenTypeRequested, content);
+            await waiter.onTokenListChangedWait(identity2, tokenId);
+            await waiter.onIssuedTokensUpdatedWait(identity1, tokenId);
+            let tokenListWallet2 = await wallet2.listTokens;
+            if (tokenListWallet2.find(tokenIdInTokenList, {tokenId: tokenId})) {
+                document.log(`requestIssueTest (${tokenId}) - OK`)
+            } else {
+                document.log(`requestIssueTest - Fail \nerror message: token (${tokenId}) is not in the list wallet recipient`)
+            }
+            await burnToken(wallet2, tokenId, new ArrayBuffer(0))
+
+        }
+
+        async function putOffer(wallet, tokenTypeSupply, tokenSupplyContent, tokenTypeDemand, tokenDemandContent) {
+            let supplyTokenDescription = new TokenDescription(tokenTypeSupply, tokenSupplyContent)
+            let demandTokenDescription = new TokenDescription(tokenTypeDemand, tokenDemandContent)
+            return await wallet.putOffer(supplyTokenDescription, demandTokenDescription).then(offer => {
+                document.log(`putOffer:\n${offer} - OK`)
+                return Promise.resolve(offer)
+            }, reason => {
+                document.log(`putOffer - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+        }
+
+        async function requestTokenTest(wallet1, wallet2) {
+            // wallet 1
+            let tokenBody = await issueTokenTest(wallet1);
+            let identity1 = await wallet1.getIdentity;
+
+            // wallet2
+            const tokenContent = ["test"];
+
+            await requestToken(wallet2, identity1, tokenBody.tokenType, tokenContent, str2ab("Hello!"));
+
+            // wallet1
+            let requestedToken = await waiter.onTokenRequestedWait(identity1, tokenBody.tokenType);
+            let memberId = requestedToken.from.name;
+            let dealId = "1234";
+            let tokenIds = [tokenBody.tokenId];
+            let to = requestedToken.message.address.keys[0];
+
+            document.log(`Receiver address: ${arrayBufferToBase64(to)}`);
+
+            await wallet1.sendToken(memberId, dealId, tokenIds, to).then(
+                val => document.log(`sendToken ${tokenIds} - OK`),
+                err => document.log(`sendToken ${tokenIds} - Fail \nerror message: ${err.message}`));
+
+            await waiter.onTokenListChangedWait(identity1, tokenBody.tokenId);
+
+            let listTokensW2 = await listTokens(wallet2);
+
+            if (listTokensW2.find(tokenIdInTokenList, {tokenId: tokenBody.tokenId})) {
+                document.log(`requestTokenTest\n(${tokenBody.tokenId}) send\nfrom: ${identity1} to: ${memberId} - OK`)
+            } else {
+                document.log(`requestIssueTest - Fail \nerror message: token (${tokenBody.tokenId}) is not in the list wallet recipient`)
+            }
+
+        }
+
+        async function offerTest(wallet1, wallet2) {
+            let tokenBody1 = await issueTokenTest(wallet1)
+            let tokenBody2 = await issueTokenTest(wallet2)
+            let tokenTypeSupply = tokenBody1.tokenType
+            let tokenSupplyContent = Array(new TokenFieldValue(0, "test"))
+            let tokenTypeDemand = tokenBody2.tokenType
+            let tokenDemandContent = Array(new TokenFieldValue(0, "test"))
+            let offer = await putOffer(wallet1, tokenTypeSupply, tokenSupplyContent, tokenTypeDemand, tokenDemandContent)
+
+            let wallet1Identity = await wallet1.getIdentity
+            let wallet2Identity = await wallet2.getIdentity
+            await waiter.onOffersChangedWait(wallet2Identity, offer.id)
+            await wallet2.getOffer(offer.id).then(getOfferContent => {
+                document.log(`getOffer:\n${getOfferContent} - OK`)
+            }, reason => {
+                document.log(`registerTokenType\n - Fail \nerror message: ${reason}`)
+            })
+            let supplyCandidates = await wallet2.listTokenSupplyCandidates(offer.id).then(listTokenSupplyCandidatesContent => {
+                document.log(`listTokenSupplyCandidates:\n${listTokenSupplyCandidatesContent} - OK`)
+                return Promise.resolve(listTokenSupplyCandidatesContent)
+            }, reason => {
+                document.log(`listTokenSupplyCandidates\n - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+
+            document.log(`${wallet1Identity} supply: ${tokenBody1.tokenId}, demand: ${tokenBody2.tokenId} from ${wallet2Identity}`)
+
+            await wallet2.applyForOffer(offer.id, supplyCandidates[0]).then(v => {
+                document.log(`applyForOffer:\n${offer.id} - OK`)
+            }, reason => {
+                document.log(`applyForOffer - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+
+
+            let messageOnApplyForOffer = await waiter.onApplyForOfferWait(wallet1Identity, offer.id)
+
+            let listTokenDemandCandidates = await wallet1.listTokenDemandCandidates(offer.id).then(listTokenDemandCandidates => {
+                document.log(`listTokenDemandCandidates:\n${listTokenDemandCandidates} - OK`)
+                return Promise.resolve(listTokenDemandCandidates)
+            }, reason => {
+                document.log(`listTokenDemandCandidates\n - Fail \nerror message: ${reason}`)
+                return Promise.reject(reason)
+            })
+
+            await wallet1.approveOffer(offer.id, messageOnApplyForOffer.message.buyerOrgName, listTokenDemandCandidates[0]).then(v => {
+                document.log(`approveOffer:\n${offer.id} - OK`)
+            }, reason => {
+                document.log(`approveOffer\n - Fail \nerror message: ${reason}`)
+            })
+
+            let messageOnApproveOffer = await waiter.onApproveOfferWait(wallet2Identity, offer.id)
+
+            await wallet2.finalizeOffer(messageOnApproveOffer.message.offerId).then(v => {
+                document.log(`finalizeOffer:\n${messageOnApproveOffer.message.offerId} - OK`)
+            }, reason => {
+                document.log(`finalizeOffer - Fail \nerror message: ${reason}`)
+            })
+
+            await wallet1.closeOffer(offer.id).then(v => {
+                document.log(`closeOffer:\n${offer.id} - OK`)
+            }, reason => {
+                document.log(`closeOffer - Fail \nerror message: ${reason}`)
+            })
+
+            await waiter.onOffersChangedWait(wallet2Identity, offer.id)
+            await waiter.onOffersChangedWait(wallet1Identity, offer.id)
+
+            let listTokensW1 = await listTokens(wallet1);
+
+            if (listTokensW1.find(tokenIdInTokenList, {tokenId: tokenBody2.tokenId})) {
+                document.log(`offerTest\n demand: (${tokenBody2.tokenId}), supply: (${tokenBody1.tokenId}) - OK`)
+            } else {
+                document.log(`offerTest - Fail \nerror message: token (${tokenBody2.tokenId}) is not in the list`)
+            }
+
+        }
+
+        async function burnToken(wallet, tokenId, extraData) {
+            return await wallet.burnToken(tokenId, extraData).then(v => {
+                document.log(`burnToken:\n${tokenId} - OK`);
+                return Promise.resolve(tokenId)
+            }, reason => {
+                document.log(`burnToken\n - Fail \nerror message: ${reason}`);
+                return Promise.reject(reason)
+            })
+        }
+
+        async function burnTokenTest(wallet) {
+            let tokenBody = await issueTokenTest(wallet);
+            let walletIdentity = await wallet.getIdentity;
+            await burnToken(wallet, tokenBody.tokenId, new ArrayBuffer(0));
+            await waiter.onTokenListChangedWait(walletIdentity, tokenBody.tokenId);
+            await waiter.onIssuedTokensUpdatedWait(walletIdentity, tokenBody.tokenId)
+        }
+
+        let wallet1;
+        let wallet2;
+
+        async function createWallets() {
+            wallet1 = await createWallet();
+            wallet2 = await createWallet();
+        }
+    </script>
+</head>
+<body>
+<br>
+<button id="createWallets">createWallets</button>
+<br>
+<br>
+<button onclick="clearStorage()">clear storage</button>
+<br>
+<br>
+<button id="registerTokenTypeTest">registerTokenTypeTest</button>
+<button id="issueTokenTest">issueTokenTest</button>
+<button id="requestIssueTest">requestIssueTest</button>
+<button id="requestTokenTest">requestTokenTest</button>
+<button id="offerTest">offerTest</button>
+<button id="burnTokenTest">burnTokenTest</button><br>
+<button id="getIdentity">getIdentity</button>
+<button id="createAddress">createAddress</button>
+<button id="listProfiles">listProfiles</button>
+<button id="createProfileTest">createProfileTest</button>
+<div id="messageLog"></div>
+</body>
+</html>

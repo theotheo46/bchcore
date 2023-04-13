@@ -1,0 +1,44 @@
+@startuml
+
+!include styles.puml
+title Issue
+
+actor "User" as U
+participant "Wallet " as W
+participant "CNFT Engine" as C
+participant "CNFT Engine Store" as S
+participant "Tokens Smart contract" as T
+'Go to wallet createIssueTx -> SignedTransaction(extraBytes = empty)
+'send to issuer - issuer checks he can issue and put extraData there. Send it to cnftEngine afterwards
+
+
+U -> W++: create issue Transaction  \nIssueFor(\n   DNA: Bytes,\n   Address: Bytes //where to issue tokens,\n   Body: Collection[String]\n)
+W -> W: Form transaction \nTransaction(\n    changes = Changes(\n        Collection(\n            Change(\n                DNA: Bytes,\n                Inputs: Collection.empty[Bytes],\n                Outputs: Collection(\n                    Output(\n                        Address: Bytes //where to issue tokens,\n                        Body: Collection[String]\n                    )\n                )\n            )\n        )    \n    )\n)
+W -> W: Signature: Sign Transaction
+W -> U: Result: \nSignedTransaction(\n    Signature: Collection[Bytes],\n    Transaction: Transaction,\n     extraData: Bytes // is empty\n)
+deactivate W
+
+U -> W++: issue with\nIssueFor(SignedTransaction)
+W -> W: ExtraBytes: Sign token body with issuer private keys
+
+W -> C++: Send \nSignedTransactiona(\n    Signature: Collection[Bytes],\n    Transaction: Transaction,\n     extraData: Bytes // is filled\n)
+C -> C: perform checks\n 1) signatures of the transaction (check there are signatures \n     for all input and outputs addresses)\n2) check no token on output address.
+C -> S++: gets Smart contract by DNA
+S -> C:Result: SmartContract(\n    Address: Bytes,\n    TypeAddress: Bytes,\n    DataFeeds: Collection[DataFeed],\n    Regulators: Collection(\n        RegulatorCapabilities(\n                Capabilties: Collection[String],\n                RegulatorId: Bytes \n        )\n    )\n),\n    Attributes\n)
+deactivate S
+C -> S++: gets SmartContractTemplate entity by TypeAddress
+S -> C: Result: SmartContractTemplate(\n    Address: Bytes,\n    DataFeedTypes: Collection[DataFeedType],\n    MetaInfo: MetaInfo,\n    StateModel: FieldMeta,\n    ClassImplementation: String\n)
+deactivate S
+C -> C: createContext - for smart contract (by dna)
+C -> T++: Call smart contract ClassImplementation: \n method onEvent(\n    Event(\n        Type: String // create, deal, delete, \n        transaction: SignedTransaction(\n            Signature: Collection[Bytes],\n            Transaction: Transaction\n         ), \n    Context\n)
+T -> T: Implementation is specific for use-case
+T -> C: ContractResult is \nTransactionResult(\n   Inputs: Collection.empty[Bytes],\n   Outputs: Collection(\n       OutputResult(\n          Address: Bytes //where to issue tokens,\n          Token: Token (\n            dna: Bytes,\n            body : Collection[String],\n            restrictions: Collection(\n                Restriction(\n                    restrictionId: String, \n                    regulatorId: String\n                )\n            )\n        )\n     )\n    )\n)
+deactivate T
+C -> S++: Save Tokens address -> Token: \nToken (\n    dna: Bytes,\n    body : Collection[String],\n    restrictions: Collection(\n        Restriction(\n            restrictionId: String, \n            regulatorId: String\n            )\n        )\n    )
+S -> C: Ok
+deactivate S
+C -> W: Ok
+deactivate C
+W -> U: Ok
+deactivate W
+@enduml

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+set -e
+
+SOURCE=$1
+OUTPUT=$3
+
+echo $(ls -l $SOURCE)
+
+cp -r ${SOURCE}/* ${OUTPUT}/
+
+exit 0

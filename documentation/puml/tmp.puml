@@ -1,0 +1,17 @@
+@startuml
+
+!include styles.puml
+title Transaction flow
+
+participant "Wallet " as W
+participant "CNFT Engine" as C
+participant "CNFT Engine Store" as S
+
+W -> C++: !
+C -> S++: ok
+S -> C: OK
+deactivate C
+deactivate W
+
+
+@enduml

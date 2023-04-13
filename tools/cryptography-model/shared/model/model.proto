@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+option java_package = "ru.sberbank.blockchain.common.cryptography";
+
+option (scalapb.options) = {
+  preserve_unknown_fields: false
+  no_default_values_in_constructor: true
+  enum_value_naming: CAMEL_CASE
+  bytes_type: "ru.sberbank.blockchain.cnft.commons.Bytes"
+  collection_type: "ru.sberbank.blockchain.cnft.commons.Collection"
+};
+
+package model;
+
+message EncryptedMessage{
+  bytes cipherText = 1;
+  bytes iv = 2;
+  bytes senderPublicKey = 3;
+  repeated WrappedForPublic wrappedKeys = 4;
+}
+
+message WrappedForPublic {
+  bytes wrappedKey = 1;
+  bytes publicKey = 2;
+}
+
+message PBEncrypted {
+  bytes salt = 1;
+  bytes iv = 2;
+  bytes data = 3;
+}
+
+message ChallengeSpec {
+  string algorithm = 1;
+  bytes value = 2;
+  string extra = 3;
+}
+
+message RingSignature {
+  bytes e = 1;
+  repeated bytes si = 2;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RingSignature\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+message RingDecoy {
+  repeated int32 ids = 1;
+
+  //  export this struct to JS
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportTopLevel(\"RingDecoy\")";
+  option (scalapb.message).annotations = "@scala.scalajs.js.annotation.JSExportAll";
+}
+
+
+message HDKey {
+  bytes k = 1;
+  bytes cc = 2;
+}
+
+message KeyPair {
+  bytes sk = 1;
+  bytes pk = 2;
+}
+
+message KeysList {
+  repeated KeyPair keys = 1;
+}

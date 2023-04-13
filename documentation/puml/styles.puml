@@ -1,0 +1,32 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam roundcorner 10
+skinparam Padding 3
+
+skinparam sequence {
+	GroupBodyBackgroundColor #FFFFFF
+	ArrowColor #000000
+
+	LifeLineBorderColor #000000
+	LifeLineBackgroundColor #F5F5F5
+
+	ParticipantBorderColor #000000
+	ParticipantBackgroundColor #F5F5F5
+
+	ParticipantFontName ArialBold
+	ParticipantFontSize 14
+	ParticipantFontColor #000000
+}
+
+skinparam state {
+  BackgroundColor #E1EFD1
+  BorderColor #5FAB3F
+  BorderColor<<ErrorCase>> #fa5c67
+
+
+  FontName ArialBold
+  FontSize 14
+  FontColor #000000
+}
+
+@enduml

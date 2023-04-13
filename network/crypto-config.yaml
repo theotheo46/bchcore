@@ -1,0 +1,21 @@
+# ---------------------------------------------------------------------------
+OrdererOrgs:
+  - Name: Orderer
+    Domain: tokenization.platform
+    Specs:
+      - Hostname: orderer-sberbank
+        SANS:
+        - localhost
+# ---------------------------------------------------------------------------
+PeerOrgs:
+  - Name: sberbank
+    Domain: sberbank.tokenization.platform
+
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+    Users:
+      Count: 1
+

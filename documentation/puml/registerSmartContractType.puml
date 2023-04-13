@@ -1,0 +1,23 @@
+@startuml
+
+!include styles.puml
+title Register smart contract types
+
+actor "User" as U
+participant "Wallet " as W
+participant "CNFT Engine" as C
+participant "CNFT Engine Store" as S
+
+U -> W++: register new smart contract type\ndef registerSmartContractTemplate(\n    DataFeedTypes: Collection[DataFeedType],\n    AttributesMeta: MetaInfo,\n    StateModel: FieldMeta,\n    ClassImplementation: String // Tokens, ICO etc\n)
+W -> W: generate address for smart contract type
+W -> C++: proxy request \nSmartContractTemplate(\n    Address: Bytes,\n    DataFeedTypes: Collection[DataFeedType],\n    AttributesMeta: MetaInfo,\n    StateModel: FieldMeta,\n    ClassImplementation: String // Tokens, ICO etc\n)
+C -> S++: checks Address doesn't exist in Store
+S -> C: OK
+deactivate S
+C -> S++: store \nSmartContractTemplate(\n    Address: Bytes,\n    DataFeedTypes: Collection[DataFeedType],\n    AttributesMeta: MetaInfo,\n    StateModel: FieldMeta,\n    ClassImplementation: String // Tokens, ICO etc\n)
+S -> C: OK
+deactivate S
+C -> W: OK
+deactivate C
+W -> U: OK
+@enduml

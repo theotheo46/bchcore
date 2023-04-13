@@ -1,0 +1,13 @@
+{
+  "name": "cnft",
+  "version": "1.0",
+  "contractType": "cnft-1.0",
+  "channelName": "service",
+  "parties": [
+    {
+      "mspId": "",
+      "role": "participants"
+    }
+  ],
+  "initArgs": []
+}

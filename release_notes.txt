@@ -1,0 +1,260 @@
+4.2.12
+* eventExtractor возвращает
+    genericMessages: Collection[IncomingMessage[BlockEvent[MessageRequest]]]
+    вместо GenericMessage теперь возвращается MessageRequest, содержащий в том числе таймстэмп операции
+
+    IssuerEvents теперь возвращает BurnRequest
+
+* добавлены экстрактор:
+    def extractGenericMessage(request: MessageRequest): R[GenericMessage] - для экстракции GenericMessage из MessageRequest
+
+* добавлен метод wallet:
+    def getOperation(operationId: String): R[Operation]
+
+4.2.11
+* добавлен метод
+    sendGenericMessage(to: String, systemId: Int, messageType: Int, messageData: Bytes): R[TxResult[Unit]]
+* добавлен event:
+    events.member.genericMessages ,
+    тип: Collection[IncomingMessage[BlockEvent[GenericMessage]]]]
+        GenericMessage(
+            systemId: Int,
+            messageType: Int,
+            data: Bytes
+            )
+* отключены гены BurnLockedAfter и BurnLockedBetween
+
+4.2.10
+* добавлены методы
+    endorseMemberPublic(memberId: String, kindId: String, data: Bytes): R[TxResult[Unit]]
+    revokePublicEndorsement(memberId: String, kindId: String): R[TxResult[Unit]]
+    listPublicEndorsements(memberId: String): R[Array[SignedPublicEndorsement]]
+* добавлены соотвествующие events: endorsedPublic, revokedEndorsements
+
+4.2.09
+* Добавлен метод addNotice(transactionId: String, notice: String, membersIds: Collection[String]): R[TxResult[Unit]]
+отправки регулятором промежуточного сообщения по регулируемой транзакции.
+* Добавлены метод для расшифровывания:
+     decryptText(encryptedString: String): R[String]
+* добавлены методы для шифрования:
+    encryptText(data: String, members: Collection[String]): R[String]
+* eventExtractor более не осуществляет расшифровку reason структуры regulatorApproval, при получении событий pendingDeal и pendingIssue
+* добавлено логгирование данных для аудита
+
+4.2.08
+* исправлен pendingBurn при обработке результатов выполнения смарт контракта
+
+4.2.07
+* операция погашения токенов осущствляется при переводе тех токенов
+* в BurnRequest, extra добавлен operationId входящей сделки на погашения, для целей регуляции.
+* смарт контракт возвращает остаток тех токенов, если очередь на погашение пуста.
+* стейт дополнен информацией о параметрах сделки.
+
+4.2.06
+* изменён стейт IndexTradeRedeem смарт-контракта для отображения данных только по неоплаченным операциям
+* исправлена ошибка при регуляции погашаемых смарт-контрактом токенов
+
+4.2.05
+* исправление ошибочного отказа при регуляции сделки направляемой на смарт-контракт при погашении токенов в рамках одной транзакции
+
+4.2.04
+* группировка тех токенов в один DealRequest
+* обработка AcceptedDeal как одной торговой операции
+* добавлена группировка в стейте результатов котировок и баланса по operationId
+
+4.2.03
+* группировка BurnRequest по deal
+
+4.2.02
+* обновление шаблона IndexTradeRedeem, исключены не используемые атрибуты
+* обратная совместимость OperationStatus.DealRejectedBySmartContract
+
+4.2.01
+* короткие коды ошибок при отказе смарт-контрактами
+    коды доступны в объектах
+        IndexTradeError
+        IndexTradeRedeemError
+        ICOError
+
+4.2.0
+* шаблон IndexTradeRedeem смарт контракта для погашения цфа на золото.
+* причина отказа смарт контрактом при регуляции сохраняется в метаданных operation history
+      DealRejectedBySmartContract(
+        dealRequest,
+        msg
+      )
+
+4.1.08
+* добавлен метод wallet.extractMemberSignature(signature: Bytes): R[MemberSignature] для получения расшифрованной MemberSignature
+* изменена логика генерации интерфейсов для TypeScript:
+    - методы, которые не принимают параметры стали полями (то есть без '() => ')
+    - интерфейсы, которым нужен конструктор, стали классами с конструктором
+
+4.1.07
+* исправление acceptedDeals index в RelatedDealReference
+
+4.1.06
+* исправление linkedoperation после отказа смарт контрактом
+* исправление события размена смарт-контракта теперь в change events
+
+4.1.05
+* смарт контракт отказывает в приеме токенов в случае несоответствия ожидаемого типа токена или стейта OutOfService
+* оптимизирован метод listTokens, с целью существенного снижения количества обращений к бч
+
+4.1.04
+* добавлен ген BurnControlledBySmartContract с параметрами в виде коллекции id смарт контрактов которые могут погашать токены данного типа.
+* смарт контракт IndexTrade распределяет токен и сдачу в отдельных сделках
+
+4.1.03
+* исправление WebCryptoEncryptionOperations в соотвествии с требованиями отчёта по безопасности
+
+
+4.1.02
+* исправление events extractor некорректной обработки погашенных токенов
+
+4.1.01
+* добавлена генерация интерфейсов для TypeScript (файл index.d.ts) в рамках генерации NPM пакета (sbt makeNPM)
+* Добавлены OperationStatus
+    OperationStatus.DealDoneByRegulator -> RegulatorTransferRequest
+    OperationStatus.BurnDoneByRegulator -> BurnRequest
+* добавлены operationId и timestamp в TXRegulationRequest, TokenTypeRegistrationRequest, TokenChangeRequest, TokenMergeRequest
+изменилось api walletlib:
+ changeToken(tokenId: String, amounts: Collection[String])
+ regulatoryChangeToken(tokenId: String, amounts: Collection[String])
+! изменения в том числе связаны с обнаруженной критической ошибкой в elliptic lib при формировании подписи и необходимы для рандомизации подписываемого контента.
+
+4.1.0
+* структура BurntTokenStatus переименована в WalletTokenStatus, добавлен статус 3 - Issued
+* в структуру WalletToken добавлены поля: tokenOwner(TokenOwner) и status (Int из WalletTokenStatus)
+* публичный API узла (ChainService) изменен:
+    - метод getToken вместо String возвращает WalletToken
+    - метод listTokens вместо Array[String] возвращает Array[WalletToken]
+    - метод listBurntTokens вместо Array[BurntToken] возвращает Array[WalletToken]
+    - метод getBurntToken вместо BurntToken возвращает WalletToken
+* метод в воллете getTokensByTypeId теперь возвращает только свои токены по заданному типу
+* в WalletCrypto добавлен метод importFromWithUpdate, который позволяет для каждой из крипто. операций обновлять контекст,
+  в частности, при обновлении сертификата пользователя можно вызвать данный метод с параметрами:
+  importFromWithUpdate(data, true, false, false, false), что приведет к вызову коллбека SelectKey.
+* исправлена ошибка валидации поля RqUID в SignByResponseValidator
+* Имплементирован новый темплейт для смарт контарата - IndexTrade
+темплейт ожидает нижеследующие атрибуты:
+    issuerAddress
+    investmentTokenType
+    hardcapSum
+    softcapSum
+    maxTransactionSum
+    minTransactionSum
+    subscriptionStartDate
+    subscriptionEndDate
+    quoteTTL
+При эмиссии токена формируется следующие метаданные контента
+    FieldMeta("amount", FieldType.Numeric),
+    FieldMeta("price", FieldType.Numeric),
+    FieldMeta("symbol", FieldType.Text),
+    FieldMeta("tenorValue", FieldType.Text),
+    FieldMeta("valueDate", FieldType.Numeric),
+    FieldMeta("bandPrice", FieldType.Numeric),
+    FieldMeta("tolerancePrice", FieldType.Numeric),
+    FieldMeta("maxBandVolume", FieldType.Numeric)
+Смарт контракт созданный на базе темплейта будет ожидать дополнительные метаданные по сделке:
+    FieldMeta("price", FieldType.Numeric),
+    FieldMeta("volume", FieldType.Numeric),
+Работа смарт контракта созданного на базе темплейта имплементирована в соотвествии со спецификацией опубликованной в confluence
+
+4.0.49-RC5
+* align tokens serialization for merge request
+
+4.0.49-RC4
+* fix for "Incorrect key treatment in Megacuks service"
+
+4.0.49-RC3
+* megacuks fix from main
+
+4.0.49-RC2
+* исправлено сохранение операций для эмитента (Burn)
+
+4.0.49-RC1
+* исправлен алгоритм для listOperations
+
+4.0.49
+* добавлен метод getTokensByTypeId
+
+4.0.48
+* добавлено событие tokenMerged для регулятора.
+* возвращена логика деривации ключа 31 версии
+* проверка публичных ключей на соответствие (переданный и в подписи PKCS7) в модуле MegaCuksCryptography.verifySignature
+
+4.0.47
+*  добавлена версионная информация, через запрос /version/gate, version/engine на гейте доступна версии gate и engine,
+/version/wallet - версия wallet, в лог файлах при запуске компонент выводиться сообщения Platform Version: n.mm.qqq
+* добавлена совместимость accessPublic c V.31
+
+4.0.46
+* исправлен порядок проверки токенов доступа.
+
+4.0.45
+* имплементированы изменения в соответствии с отчётом аудита уязвимостей кода
+
+4.0.44
+* tokenId энкодер возвращен к алгоритму V.31
+
+4.0.43
+* issue возвращает operationId
+* исправлена ошибка зависания при конкаррент отправке токенок
+* исправлена кодировка body с одиночным аргументом типа string
+* сертификат регулятора отображается в /block-events в публичном виде (так как при подписании мегацуксом сертификат появляется в публичном виде)
+
+4.0.42
+Имплементированы изменения в соответствии с отчётом аудита уязвимостей кода:
+* frontend , frontend-react, вынесены в отдельные репозитории, примеры стороннего кода js содержащие уязвимости удалены.
+* СNFTCrypto дополнен secureRandomGenerator фабрикой, создающей экземпляр генератор случаных чисел.
+* Изменена сигнатура метода CNFTCrypto.newContext, дополнительный аргумент должен содержать фабрику генератора случайных чисел.
+.newContext(
+CNFTCrypto.hdSignatureOperations(HDPathStore.inMemory()),
+CNFTCrypto.bouncyCastleEncryption(),
+CNFTCrypto.bouncyCastleAccessOperations(),
+CNFTCrypto.hdSignatureOperations(HDPathStore.inMemory()),
+CNFTCrypto.hash(),
+CNFTCrypto.secureRandomGenerator()
+)
+* Изменена сигнатура класса WalletCrypto, добавлен аргумент ожидающий реализацию интерфейса SecureRandomGenerator
+WalletCrypto(
+walletIdentity,
+identityOperations,
+encryptionOperations,
+accessOperations,
+addressOperations,
+hash,
+randomGeneratorFactory.create
+)
+
+4.0.41
+* восстановлена совместимость формата (хранения) кошелька с версией 31 для JS
+* добавлена информация о версии (и соответсвующем номере блока)
+* изменена механика парсинга событий из блоков - блоки с номером меньше текущей версии парится не будут
+
+sberchain-epv-0.40:
+* Добавлен метод позволяющий мерджить токены ( wallet.mergeTokens )
+* В шаблоне смарт контракта ICO исправлена проверка соответсвия типа инвестируемого токена
+* Изменён формат приватных сообщений: подпись отправителя перенесана внутрь
+* Восстановлен формат и криптографическая кривая для одноразовых ключей (Secp256K1)
+* Для JVM восстановлена совместимость формата хранения кошелька с версией 31
+
+sberchain-epv-0.39:
+* В шаблоне смарт контракта ICO добавлена проверка делимости нацело каждого инвестируемого токена
+* Исправлена проблема вычитки блоков с токенами, владелец которых, на момент вычитки поменялся
+
+sberchain-epv-0.36:
+* Изменен подход к работе с состоянием кошелька. Теперь информация о токенах, история транзакций и пр. не хранятся локально в кошельке.
+* Из WalletSpec удалены методы removeAddress, listAddresses, listArchivedAddresses, resetWallet, listPendingOperation. В WalletSpec добавлен метод listMessages.
+* Добавлен ген BurnLockedBetween, ограничивающий сжигание токена в определенный преиод времени (от и до).
+
+sberchain-epv-0.35:
+* Добавлена возможность устанавливать максимальный размер сообщений, проходящих через Gate. Настройка задается в переменной окружения MAX_INBOUND_MESSAGE_SIZE (указывается в МБ, по-умолчанию 100 МБ).
+* Долбавлено ограничение на повторение id токена в одном Deal.
+* Реализован спам-фильтр на Gate. Сложность Hashcash алгоритма задается при запуске Gate в переменной окружения HASHCASH_DIFFICULTY.
+* Реализована поддержка сервиса Мегацукс. Настройки удаленного подписания задаются в переменных окружения WALLET_REMOTE_IDENTITY_OPERATIONS и WALLET_REMOTE_ADDRESS_OPERATIONS.
+* Добавлен эффект SmartContracteStateUpdated в BlockEvents.
+* Добавлена проверка подписи при регистрации смарт-контракта и Data Feed.
+* Добавлена возможность настраивать способ регистрации WalletRemote при запуске - напрямую или через админиский кошелек. Настройка задается в переменной окружения ADMIN_WALLET_URL.
+* В модель TokenAdded (используется в TokenChangeResponse) добавлено поле restrictions типа TokenRestrictions.

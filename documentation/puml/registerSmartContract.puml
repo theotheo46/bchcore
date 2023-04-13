@@ -1,0 +1,26 @@
+@startuml
+
+!include styles.puml
+title Register smart contracts
+
+actor "User" as U
+participant "Wallet " as W
+participant "CNFT Engine" as C
+participant "CNFT Engine Store" as S
+
+U -> W++: register new smart contract\nSmartContract(\n    Address: Bytes,\n    TypeAddress: Bytes,\n    DataFeeds: Collection[Bytes],\n    Regulators: Collection(\n        RegulatorCapabilities(\n                Capabilties: Collection[String],\n                RegulatorId: Bytes \n        )\n    ),\n    Attributes: Collection[String] (e.g. hardcap) // of the MetaInfo\n)
+W -> C++: proxies request \nSmartContract(\n    Address: Bytes,\n    TypeAddress: Bytes,\n    DataFeeds: Collection[Bytes],\n    Regulators: Collection(\n        RegulatorCapabilities(\n                Capabilties: Collection[String],\n                RegulatorId: Bytes \n        )\n    ),\n    Attributes: Collection[String]\n)
+C -> S++: checks Address doesn't exist in Store
+S -> C: OK
+deactivate S
+C -> S++: gets SmartContractTemplate entity by TypeAddress
+S -> C: Result: SmartContractTemplate(\n    TypeAddress,\n    DataFeedTypes,\n    MetaInfo,\n    ClassImplementation\n)
+deactivate S
+C -> C: performs checks on: \n1) DataFeeds and DataFeedTypes\n2) Attributes and MetaInfo\n
+C -> S++: stores SmartContract(\n    Address: Bytes,\n    TypeAddress: Bytes,\n    DataFeeds: Collection[Bytes],\n    Regulators: Collection(\n        RegulatorCapabilities(\n                Capabilties: Collection[String],\n                RegulatorId: Bytes \n        )\n    ),\n    Attributes: Collection[String]\n)
+S -> C: OK
+deactivate S
+C -> W: OK
+deactivate C
+W -> U: OK
+@enduml

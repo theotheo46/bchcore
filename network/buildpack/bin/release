@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# The bin/release script is responsible for providing chaincode metadata to the peer.
+# bin/release is optional. If it is not provided, this step is skipped.
+#
+# The peer invokes release with two arguments:
+# bin/release BUILD_OUTPUT_DIR RELEASE_OUTPUT_DIR
+#
+# When release is invoked, BUILD_OUTPUT_DIR contains the artifacts
+# populated by the build program and should be treated as read only input.
+# RELEASE_OUTPUT_DIR is the directory where release must place artifacts to be consumed by the peer.
+
+set -e
+
+BLD="$1"
+RELEASE="$2"
+
+mkdir -p "$RELEASE"/chaincode/server
+cp ${BLD}/connection.json "$RELEASE"/chaincode/server/
+
+exit 0
